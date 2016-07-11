@@ -1,8 +1,11 @@
 from django.db import models
 import json
+from django.contrib.auth.models import User
 
 
-class NewsFeed(models.Model):
+class News(models.Model):
+    user = models.ForeignKey(User, related_name='profile')
+#    user = models.ForeignKey(User, unique=True, related_name='profile')
     headline = models.CharField(null=False, max_length=100)
     content = models.CharField(default="", max_length=5000)
     tags = models.CharField(default={}, max_length=200)
