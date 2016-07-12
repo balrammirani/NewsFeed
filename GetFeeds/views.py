@@ -1,57 +1,79 @@
-from rest_framework.generics import ListAPIView,RetrieveAPIView, RetrieveUpdateAPIView,CreateAPIView,DestroyAPIView
+from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView, DestroyAPIView
 from .models import News
-from .serializer import NewsSerializer,NewsDetailSerializer, NewsUpdateSerializer,NewsCreateSerializer
+from .serializer import (
+    NewsSerializer,
+    NewsDetailSerializer,
+    NewsCreateSerializer
+)
+from rest_framework.mixins import DestroyModelMixin, UpdateModelMixin
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser, IsAuthenticatedOrReadOnly
-from .pagination import NewsLimitOffsetPagination,NewsPageNumberPagination
+from .pagination import NewsLimitOffsetPagination, NewsPageNumberPagination
 from .permissions import IsOwnerOrReadOnly
+
+
 # Create your views here.
 
 
 class NewsCreateAPIView(CreateAPIView):
-
     queryset = News.objects.all()
     serializer_class = NewsCreateSerializer
-    permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
-#    def form_valid(self, request):
-#        object.owner = self.request.user
-#        print(object.owner.id)
-        #object.save()
-        #return super(NewsCreateAPIView, self).form_valid(form)
+    #    def form_valid(self, request):
+    #        object.owner = self.request.user
+    #        print(object.owner.id)
+    # object.save()
+    # return super(NewsCreateAPIView, self).form_valid(form)
 
-
+'''
 class NewsDeleteAPIView(DestroyAPIView):
-
     queryset = News.objects.all()
     serializer_class = NewsDetailSerializer
+'''
+
+# Detail + Update + Delete
 
 
-class NewsDetailAPIView(RetrieveAPIView):
-
+class NewsDetailAPIView(DestroyModelMixin, UpdateModelMixin, RetrieveAPIView):
     queryset = News.objects.all()
     serializer_class = NewsDetailSerializer
+    permission_classes = [IsOwnerOrReadOnly]
+
+    #  def perform_update(self, serializer): #for RetrieveUpdateAPIView
+    #      serializer.save(user=self.request.user)
+
+    def put(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        return self.destroy(request, *args, **kwargs)
 
 
 class NewsListAPIView(ListAPIView):
+    queryset = News.objects.all()
+    serializer_class = NewsSerializer
+    pagination_class = NewsPageNumberPagination
+    #permission_classes = [AllowAny]
 
-        queryset = News.objects.all()
-        serializer_class = NewsSerializer
-        pagination_class = NewsPageNumberPagination
 
-
-class NewsUpdateAPIView(RetrieveUpdateAPIView):
+'''
+class NewsUpdateAPIView(DestroyModelMixin, UpdateModelMixin, RetrieveAPIView):
 
     queryset = News.objects.all()
-    serializer_class = NewsUpdateSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly,IsOwnerOrReadOnly]
+    serializer_class = NewsDetailSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+  #  def perform_update(self, serializer): #for RetrieveUpdateAPIView
+  #      serializer.save(user=self.request.user)
 
-    def perform_update(self, serializer):
-        serializer.save(user=self.request.user)
+    def put(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
 
+    def delete(self, request, *args, **kwargs):
+        return self.destroy(request, *args, **kwargs)
 
+'''
 # class UserFormView(View):
 #     form_class = UserForm
 #     template_name = 'GetFeeds/registration_form.html'
